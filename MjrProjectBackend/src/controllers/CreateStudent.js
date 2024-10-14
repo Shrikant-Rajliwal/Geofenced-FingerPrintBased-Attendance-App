@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // Controller function to create a new student
 const createStudent = async (req, res) => {
-  const { username, prn, password, mobile, division } = req.body;
+  const { username, prn, password, mobile, division, year } = req.body; // Add year and section
 
   console.log('Received data:', req.body); // Log incoming data for debugging
 
@@ -34,6 +34,7 @@ const createStudent = async (req, res) => {
       password: encryptedPass,
       mobile,
       division,
+      year,    // Store year
     });
 
     res
@@ -45,7 +46,6 @@ const createStudent = async (req, res) => {
   }
 };
 
-// Controller function for student login
 // Controller function for student login
 const loginStudent = async (req, res) => {
   const { prn, password } = req.body;
@@ -64,12 +64,17 @@ const loginStudent = async (req, res) => {
     }
 
     const studentId = user._id; // Only passing the studentId
+    const year = user.year;     // Add year from the user object
+    const division = user.division; // Add section from the user object
+
     console.log('StudentId:', studentId);
 
-    // Send the studentId with the response
+    // Send the studentId, year, and section with the response
     res.status(200).send({
       message: 'Login successful',
-       studentId, // Only return studentId
+      studentId,  // Return studentId
+      year,       // Return year
+      division,    // Return section
     });
   } catch (e) {
     console.error(e); // Log the error for debugging

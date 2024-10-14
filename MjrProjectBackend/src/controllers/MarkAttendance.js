@@ -21,6 +21,8 @@ const markAttendance = async (req, res) => {
             subject,
             division,
             prn: student.prn, // Add PRN from student record
+            year: student.year
+
         });
 
         await attendance.save();

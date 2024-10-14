@@ -32,7 +32,7 @@ export default function TeacherRegister() {
         };
     
         try {
-            const response = await axios.post("http://192.168.137.1:5000/api/teachers/createTeacher", teacherData, {
+            const response = await axios.post("http://192.168.43.25:5000/api/teachers/createTeacher", teacherData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }

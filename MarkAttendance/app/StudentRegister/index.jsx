@@ -1,9 +1,8 @@
-import React, { useState,useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ImageBackground } from 'react-native';
 import axios from 'axios'; // Import axios for handling API calls
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
-
 
 export default function StudentSignup() {
   const router = useRouter(); // For navigation
@@ -12,7 +11,10 @@ export default function StudentSignup() {
   const [PRN, setPRN] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  
+  const [year, setYear] = useState(""); // New state for year input
+  const [yearValid, setYearValid] = useState(false); // State for year validation
+  
   const [usernameValid, setUsernameValid] = useState(false);
   const [mobileValid, setMobileValid] = useState(false);
   const [PRNValid, setPRNValid] = useState(false);
@@ -20,13 +22,23 @@ export default function StudentSignup() {
   const [division, setDivision] = useState(''); // State for division
   const [divisionVerify, setDivisionVerify] = useState(false); // State for division verification
 
+  // Handle division input and validation
   function handleDivision(text) {
     setDivision(text.toUpperCase()); // Convert input to uppercase
-    // Only allow "A", "B", or "C" for division input
     if (["A", "B", "C"].includes(text.toUpperCase())) {
       setDivisionVerify(true); // Set division verification state to true
     } else {
       setDivisionVerify(false); // Set division verification state to false
+    }
+  }
+
+  // Handle year input and validation
+  function handleYearChange(text) {
+    setYear(text.toUpperCase());
+    if (["FE", "SE", "TE", "BE"].includes(text.toUpperCase())) {
+      setYearValid(true); // Year is valid if it matches one of these values
+    } else {
+      setYearValid(false);
     }
   }
 
@@ -55,11 +67,12 @@ export default function StudentSignup() {
   };
 
   const handleSubmit = () => {
-    if (usernameValid && mobileValid && PRNValid) {
+    if (usernameValid && mobileValid && PRNValid && yearValid && divisionVerify) {
       const studentData = {
         username,
         mobile,
         prn: PRN,
+        year,
         division,
         password,
       };
@@ -133,6 +146,25 @@ export default function StudentSignup() {
               onChangeText={handlePRNChange}
               value={PRN}
             />
+          </View>
+
+          {/* Year Input */}
+          <View className="relative w-11/12 flex-row border-b-2 mt-3" style={{ borderBottomColor: '#1A8FE3', marginBottom: 8 }}>
+            <TextInput
+              className="flex-1 h-10 p-2 ml-2"
+              placeholder="Year (FE, SE, TE, BE)"
+              placeholderTextColor="#888"
+              style={{ color: '#000000' }}
+              value={year}
+              onChangeText={handleYearChange}
+            />
+            {year.length > 0 && (
+              <Text
+                className={`absolute right-0 p-2 ${yearValid ? 'text-green-500' : 'text-red-500'}`}
+              >
+                {yearValid ? '✔' : '✘'}
+              </Text>
+            )}
           </View>
 
           {/* Password Input */}

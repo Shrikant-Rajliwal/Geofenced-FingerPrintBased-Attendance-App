@@ -38,7 +38,7 @@ export default function TeacherLogin() {
       password,
     };
 
-    axios.post("http://192.168.137.1:5000/api/teachers/loginTeacher", loginData)
+    axios.post("http://192.168.43.25:5000/api/teachers/loginTeacher", loginData)
       .then(res => {
         console.log(res.data);
         if (res.data.status === 'OK') {

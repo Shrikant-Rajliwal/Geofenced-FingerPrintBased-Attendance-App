@@ -9,39 +9,35 @@ export default function Notifications() {
     const [notifications, setNotifications] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
-    
+    const [loading, setLoading] = useState(true); // Add loading state
+
     const route = useRoute();
-    const { StudentId } = route.params; // Destructure StudentId from route params
-    console.log('StudentId:', StudentId); // Logging for debugging
+    const { studentId, year, division } = route.params; // Destructure year, division from route params
+    console.log(studentId, year, division);
 
     useEffect(() => {
         const fetchNotifications = async () => {
-            // Example fetched notifications
-            const fetchedNotifications = [
-                {
-                    id: '1',
-                    message: "Attendance is now open for Class 10A.",
-                    date: "10th September 2024 | 11.00 AM",
-                    subject: "Mathematics",
-                    teacher: "Mr. Smith",
-                    // studentId: StudentId,
-                    division: "C",
-                },
-                {
-                    id: '2',
-                    message: "Attendance is now open for Class 10B.",
-                    date: "10th September 2024 | 11.30 AM",
-                    subject: "Science",
-                    teacher: "Ms. Johnson",
-                    // studentId: StudentId,
-                    division: "C",
-                },
-            ];
-            setNotifications(fetchedNotifications);
+            try {
+                // Fetch notifications based on year and division
+                const response = await axios.get(`http://192.168.43.25:5000/api/students/getNotification/${year}/${division}`);
+                setNotifications(response.data); // Set fetched notifications
+                setLoading(false); // Stop loading
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+                Alert.alert('Error', 'Failed to fetch notifications. Please try again later.');
+                setLoading(false);
+            }
         };
 
+        // Fetch notifications initially
         fetchNotifications();
-    }, [StudentId]);
+
+        // Set up polling to fetch notifications every 10 seconds
+        const intervalId = setInterval(fetchNotifications, 10000); // Fetch every 10 seconds
+
+        // Clear interval on component unmount
+        return () => clearInterval(intervalId);
+    }, [year, division]); // Fetch notifications whenever year or division changes
 
     const handleNotificationPress = (notification) => {
         setSelectedNotification(notification);
@@ -78,11 +74,10 @@ export default function Notifications() {
         if (!selectedNotification) return;
 
         const { subject, division } = selectedNotification;
-        console.log(selectedNotification);
 
         try {
             const response = await axios.post('http://192.168.43.25:5000/api/students/attendance/mark', {
-                studentId: StudentId, // Use the correct studentId here
+                studentId, // Use the correct studentId here
                 subject,
                 division,
             });
@@ -115,12 +110,18 @@ export default function Notifications() {
     return (
         <View className="flex-1 bg-white p-4">
             <Text className="text-2xl font-bold mb-4">Notifications</Text>
-            <FlatList
-                data={notifications}
-                renderItem={renderNotificationItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            />
+
+            {/* Display loading spinner or message */}
+            {loading ? (
+                <Text className="text-center text-gray-500">Loading notifications...</Text>
+            ) : (
+                <FlatList
+                    data={notifications}
+                    renderItem={renderNotificationItem}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                />
+            )}
 
             {/* Modal for Fingerprint Submission */}
             <Modal

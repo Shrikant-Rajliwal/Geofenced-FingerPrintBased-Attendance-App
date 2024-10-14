@@ -19,14 +19,15 @@ const studentSchema = new mongoose.Schema({
     trim: true,
     unique: true,
   },
-  // Class: {
-  //   type: String,
-  //   required: true,
-  //   enum: ['FE', 'SE', 'TE', 'BE'], // Enumerate the possible class values
-  // },
+  year: {
+    type: String,
+    required: true,
+    enum: ['FE', 'SE', 'TE', 'BE'], // Only allow valid year values
+  },
   division: {
     type: String,
     required: true,
+    trim: true, // Ensure there's no accidental white space
   },
   password: {
     type: String,

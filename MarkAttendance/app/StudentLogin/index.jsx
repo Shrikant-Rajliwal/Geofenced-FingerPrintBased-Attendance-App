@@ -34,12 +34,14 @@ export default function StudentLogin() {
     
             if (response.data.message === "Login successful") {
                 const studentId = response.data.studentId; // Extract studentId
-                console.log( studentId);
+                const year = response.data.year; // Assuming year is part of the response
+                const division = response.data.division; // Assuming division is part of the response
+                console.log(studentId, year, division);
                 
-                // Navigate to the notification page with studentId
+                // Navigate to the notification page with studentId, year, and division
                 router.push({
                     pathname: 'navigation/Notification', // Update this to your notification page path
-                    params: { StudentId: studentId }, // Pass the student ID
+                    params: { studentId: studentId, year: year, division: division }, // Pass the studentId, year, and division
                 });
             } else {
                 console.error('Login failed:', response.data.message);
@@ -52,6 +54,7 @@ export default function StudentLogin() {
             setLoading(false); // Stop loading state
         }
     };
+    
     
 
     return (
