@@ -1,14 +1,29 @@
 const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 const app = express();
-require('dotenv').config(); // Load environment variables
-const studentRoutes = require("./src/routes/studentRoutes.js"); // Ensure this path is correct
+require('dotenv').config();
+const studentRoutes = require("./src/routes/studentRoutes.js");
 const teacherRoutes = require("./src/routes/teacherRoutes.js");
-require('./src/config/db.js'); // Ensure this is the correct path to your db connection file
+require('./src/config/db.js');
 
-// Middleware to parse incoming JSON requests
 app.use(express.json());
 
-// Use student routes
+// Create the HTTP server and bind the Express app to it
+const server = http.createServer(app);
+
+// Initialize Socket.IO and bind it to the HTTP server
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Attach Socket.IO instance to app
+app.set('io', io); // Store Socket.IO instance in the app
+
+// Use student and teacher routes
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);
 
@@ -17,8 +32,18 @@ app.get('/', (req, res) => {
     res.send("Hello World");
 });
 
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
+
 // Start the server on the specified port from environment variables
-const PORT = process.env.PORT || 5000; // Fallback to 5000 if PORT is not set in .env
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
