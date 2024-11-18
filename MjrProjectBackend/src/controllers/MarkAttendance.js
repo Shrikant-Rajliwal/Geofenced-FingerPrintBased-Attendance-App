@@ -1,43 +1,78 @@
 const Attendance = require('../models/AttendanceSchema');
 const Student = require('../models/StudentSchema');
-const Notification = require('../models/NotificationSchema'); // Import your notification model
+const Notification = require('../models/NotificationSchema');
 
-const markAttendance = async (req, res) => {
-    const { studentId, subject, division, notificationId } = req.body; // Expect notificationId to be sent in the request
-    console.log(studentId, subject, division, notificationId);
-    
+const MarkAttendance = async (req, res) => {
+    console.log("Request Body Data =>", req.body);
+    const { studentId, subject, division, notificationId, deviceId } = req.body;
+
     try {
         // Find the student by ID to get their details
         const student = await Student.findById(studentId);
         if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
+            return res.status(404).json({ 
+                message: 'Student not found', 
+                showPopup: true 
+            });
         }
 
-        // Create a new attendance record with the PRN
+        // Check if the device ID matches the student's registered device
+        if (student.deviceId !== deviceId) {
+            return res.status(400).json({
+                message: 'Attendance can only be marked from the registered device.',
+                showPopup: true,
+            });
+        }
+
+        // Check if attendance for this notification and student already exists
+        const existingAttendance = await Attendance.findOne({
+            studentId: student._id,
+            subject,
+            division,
+            notificationId
+        });
+
+        if (existingAttendance) {
+            return res.status(400).json({
+                message: 'Attendance already marked for this notification.',
+                showPopup: true,
+            });
+        }
+
+        // Create a new attendance record
         const attendance = new Attendance({
             studentId: student._id,
             studentName: student.username,
             subject,
             division,
             prn: student.prn, // Add PRN from student record
-            year: student.year
+            year: student.year,
         });
 
         await attendance.save();
 
-        // Update the notification to mark attendance as done
+        // Mark the notification as done
         if (notificationId) {
             const notification = await Notification.findById(notificationId);
             if (notification) {
-                notification.attendanceMarked = true; // Set attendanceMarked to true
+                notification.attendanceMarked = true;
                 await notification.save();
             }
         }
 
-        res.status(200).json({ message: 'Attendance marked successfully.' });
+        res.status(200).json({ 
+            message: 'Attendance marked successfully.', 
+            showPopup: false 
+        });
+
     } catch (error) {
-        res.status(400).json({ message: 'Error marking attendance', error });
+        console.error("Error marking attendance:", error);
+        res.status(500).json({ 
+            message: 'An error occurred while marking attendance.', 
+            error,
+            showPopup: true 
+        });
     }
 };
 
-module.exports = { markAttendance };
+module.exports = { MarkAttendance };

@@ -101,7 +101,7 @@ export default function TeacherDashboard() {
         }}
       />
 
-      <Button title="Send Notification" onPress={handleSendNotification} color="blue" />
+      <Button title="Send Notification" onPress={handleSendNotification} style={{ backgroundColor: '#1A8FE3', width: 270 }} />
     </View>
   );
 }

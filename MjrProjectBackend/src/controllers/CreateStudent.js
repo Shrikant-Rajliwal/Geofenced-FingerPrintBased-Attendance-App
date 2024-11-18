@@ -4,9 +4,11 @@ const jwt = require('jsonwebtoken');
 
 // Controller function to create a new student
 const createStudent = async (req, res) => {
-  const { username, prn, password, mobile, division, year } = req.body; // Add year and section
-
-  console.log('Received data:', req.body); // Log incoming data for debugging
+  const { username, prn, password, mobile, division, year ,deviceId} = req.body; // Add year and section
+  
+  console.log(deviceId);
+  
+  // console.log('Received data:', req.body); // Log incoming data for debugging
 
   // Validate password
   if (!password || typeof password !== 'string') {
@@ -34,7 +36,8 @@ const createStudent = async (req, res) => {
       password: encryptedPass,
       mobile,
       division,
-      year,    // Store year
+      year,
+      deviceId    // Store deviceId
     });
 
     res

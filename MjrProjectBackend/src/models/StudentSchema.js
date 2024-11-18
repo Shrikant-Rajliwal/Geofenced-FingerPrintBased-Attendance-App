@@ -33,6 +33,9 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  deviceId: { // Add this line
+    type: String, // Storing the device ID as a string
+  },
 }, {
   timestamps: true, // Add createdAt and updatedAt timestamps
 });

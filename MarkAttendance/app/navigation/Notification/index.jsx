@@ -5,6 +5,8 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import io from 'socket.io-client'; // Import Socket.IO client
+import * as Device from 'expo-device'; // Import Device from expo-device
+
 
 export default function Notifications() {
     const [notifications, setNotifications] = useState([]);
@@ -13,10 +15,12 @@ export default function Notifications() {
     const [loading, setLoading] = useState(true);
 
     const route = useRoute();
-    const { studentId, year, division } = route.params;
+    const { studentId, year, division, modelName } = route.params; // Extract modelName
 
     useEffect(() => {
         const fetchNotifications = async () => {
+
+            
             try {
                 const response = await axios.get(`http://192.168.43.25:5000/api/students/getNotification/${year}/${division}`);
                 const notificationsWithTimestamp = response.data.map(notification => ({
@@ -109,41 +113,37 @@ export default function Notifications() {
     const handleFingerprintSubmit = async () => {
         if (!selectedNotification) return;
     
-        // Log the selected notification to ensure it contains the notificationId
-        console.log('Selected Notification:', selectedNotification);
-    
         const { subject, division, _id: notificationId } = selectedNotification;
-    
-        if (!notificationId) {
-            Alert.alert('Error', 'Notification ID is missing. Cannot mark attendance.');
-            return;
-        }
+        const modelName = Device.modelName;
     
         try {
             const response = await axios.post('http://192.168.43.25:5000/api/students/attendance/mark', {
                 studentId,
                 subject,
                 division,
-                notificationId, // Send the notification ID
+                notificationId,
+                deviceId: modelName,
             });
     
-            // Check if the response indicates success
-            if (response.status === 200) {
-                // Update the notification to mark attendance as completed
+            const { showPopup, message } = response.data;
+    
+            if (!showPopup) {
+                // Update UI only on successful attendance marking
                 setNotifications(prevNotifications =>
                     prevNotifications.map(notification =>
                         notification._id === selectedNotification._id
-                            ? { ...notification, attendanceMarked: true } // Update attendanceMarked status
+                            ? { ...notification, attendanceMarked: true }
                             : notification
                     )
                 );
-    
-                Alert.alert('Attendance Marked Successfully', response.data.message);
+                Alert.alert('Success', message);
             } else {
-                Alert.alert('Error', response.data.message);
+                // Show error message without updating UI
+                Alert.alert('Error', message);
             }
         } catch (error) {
             console.error('Error marking attendance:', error);
+            data = error;
             Alert.alert('Error', 'Failed to mark attendance. Please try again.');
         } finally {
             setModalVisible(false);
@@ -151,7 +151,7 @@ export default function Notifications() {
         }
     };
     
-
+    
     const formatTime = (seconds) => {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
