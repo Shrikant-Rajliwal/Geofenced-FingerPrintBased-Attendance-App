@@ -6,7 +6,10 @@ import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import io from 'socket.io-client'; // Import Socket.IO client
 import * as Device from 'expo-device'; // Import Device from expo-device
+import { LogBox } from 'react-native'; // For suppressing warnings
 
+// Suppress all logs (YellowBox)
+LogBox.ignoreAllLogs();
 
 export default function Notifications() {
     const [notifications, setNotifications] = useState([]);
@@ -15,47 +18,43 @@ export default function Notifications() {
     const [loading, setLoading] = useState(true);
 
     const route = useRoute();
-    const { studentId, year, division, modelName } = route.params; // Extract modelName
+    const { studentId, year, division } = route.params;
 
     useEffect(() => {
         const fetchNotifications = async () => {
-
-            
             try {
-                const response = await axios.get(`http://192.168.43.25:5000/api/students/getNotification/${year}/${division}`);
+                const response = await axios.get(
+                    `http://192.168.43.25:5000/api/students/getNotification/${year}/${division}`
+                );
                 const notificationsWithTimestamp = response.data.map(notification => ({
                     ...notification,
                     timestamp: Date.now(), // Add current timestamp
                     attendanceMarked: false, // Add a flag to track attendance marking
                 }));
-                setNotifications(notificationsWithTimestamp); // Set fetched notifications
+                setNotifications(notificationsWithTimestamp);
             } catch (error) {
                 console.error('Error fetching notifications:', error);
                 Alert.alert('Error', 'Failed to fetch notifications. Please try again later.');
             } finally {
-                setLoading(false); // Ensure loading state is updated
+                setLoading(false);
             }
         };
 
         fetchNotifications();
 
-        // Set up Socket.IO connection for real-time notifications
         const socket = io('http://192.168.43.25:5000');
-
         socket.on('notification', (data) => {
-            console.log('Real-time notification received:', data);
             const notificationWithTimestamp = {
                 ...data,
-                timestamp: Date.now(), // Add current timestamp
-                attendanceMarked: false, // Add attendanceMarked flag
+                timestamp: Date.now(),
+                attendanceMarked: false,
             };
             setNotifications(prevNotifications => [notificationWithTimestamp, ...prevNotifications]);
             Alert.alert('New Notification', `${data.title}: ${data.message}`);
 
-            // Remove notification after 5 minutes
             setTimeout(() => {
                 setNotifications(prev => prev.filter(notification => notification._id !== notificationWithTimestamp._id));
-            }, 5 * 60 * 1000); // 5 minutes (300 seconds)
+            }, 5 * 60 * 1000); // 5 minutes
         });
 
         return () => {
@@ -65,14 +64,16 @@ export default function Notifications() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setNotifications(prevNotifications => prevNotifications.map(notification => {
-                const timeElapsed = (Date.now() - notification.timestamp) / 1000; // Time elapsed in seconds
-                const timeRemaining = 300 - timeElapsed; // Countdown from 5 minutes (300 seconds)
-                return { ...notification, timeRemaining: timeRemaining > 0 ? timeRemaining : 0 }; // Ensure it doesn't go negative
-            }));
-        }, 1000); // Update every second
+            setNotifications(prevNotifications =>
+                prevNotifications.map(notification => {
+                    const timeElapsed = (Date.now() - notification.timestamp) / 1000; // Time in seconds
+                    const timeRemaining = 300 - timeElapsed; // Countdown from 5 minutes
+                    return { ...notification, timeRemaining: timeRemaining > 0 ? timeRemaining : 0 };
+                })
+            );
+        }, 1000);
 
-        return () => clearInterval(interval); // Clean up on unmount
+        return () => clearInterval(interval);
     }, []);
 
     const handleNotificationPress = (notification) => {
@@ -84,29 +85,34 @@ export default function Notifications() {
         }
     };
 
-    const handleFingerprintAuthentication = async () => {
+    const handleAttendanceMarking = async () => {
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        if (!hasHardware) {
-            Alert.alert('Device Error', 'Biometric authentication is not available on this device.');
-            return;
-        }
-
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        if (!isEnrolled) {
-            Alert.alert('No Biometrics', 'No biometrics are enrolled on this device.');
-            return;
-        }
 
-        const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: 'Mark Attendance with Fingerprint',
-            fallbackLabel: 'Use Passcode',
-        });
+        if (hasHardware && isEnrolled) {
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Mark Attendance with Fingerprint',
+                fallbackLabel: 'Use Passcode',
+            });
 
-        if (result.success) {
-            Alert.alert('Fingerprint Authentication Successful', 'You have been counted!');
-            handleFingerprintSubmit(); // Call attendance marking function
+            if (result.success) {
+                Alert.alert('Success', 'Fingerprint Authentication Successful!');
+                handleFingerprintSubmit();
+            } else {
+                Alert.alert('Authentication Failed', 'Fingerprint not recognized. Please try again.');
+            }
         } else {
-            Alert.alert('Authentication Failed', 'Fingerprint not recognized. Please try again.');
+            Alert.alert(
+                'Biometric Unavailable',
+                'Biometric authentication is not available. You can proceed without biometrics.',
+                [
+                    {
+                        text: 'Mark Attendance Without Biometrics',
+                        onPress: handleFingerprintSubmit,
+                    },
+                    { text: 'Cancel', style: 'cancel' },
+                ]
+            );
         }
     };
 
@@ -128,7 +134,6 @@ export default function Notifications() {
             const { showPopup, message } = response.data;
     
             if (!showPopup) {
-                // Update UI only on successful attendance marking
                 setNotifications(prevNotifications =>
                     prevNotifications.map(notification =>
                         notification._id === selectedNotification._id
@@ -138,19 +143,18 @@ export default function Notifications() {
                 );
                 Alert.alert('Success', message);
             } else {
-                // Show error message without updating UI
-                Alert.alert('Error', message);
+                // Updated error message for device ID mismatch or any other failure
+                Alert.alert('Error', 'Device ID mismatch. Please ensure you are using the correct device for marking attendance.');
             }
         } catch (error) {
             console.error('Error marking attendance:', error);
-            data = error;
-            Alert.alert('Error', 'Failed to mark attendance. Please try again.');
+            // Updated error message for general failure to mark attendance
+            Alert.alert('Error', 'Device ID mismatch. Please ensure you are using the correct device for marking attendance');
         } finally {
             setModalVisible(false);
-            setSelectedNotification(null); // Clear selected notification
+            setSelectedNotification(null);
         }
     };
-    
     
     const formatTime = (seconds) => {
         const minutes = Math.floor(seconds / 60);
@@ -168,7 +172,6 @@ export default function Notifications() {
                 <Text className="text-sm text-gray-500">{item.date}</Text>
                 <Text className="text-sm text-gray-700">Subject: {item.subject}</Text>
                 <Text className="text-sm text-gray-700">Teacher: {item.teacher}</Text>
-                {/* Display the countdown timer */}
                 {item.timeRemaining > 0 ? (
                     <Text className="text-sm text-red-500">
                         Time remaining: {formatTime(item.timeRemaining)}
@@ -176,7 +179,6 @@ export default function Notifications() {
                 ) : (
                     <Text className="text-sm text-gray-500">Expired</Text>
                 )}
-                {/* Show "Attendance Marked" if already marked */}
                 {item.attendanceMarked && (
                     <Text className="text-sm text-green-500">Attendance Marked</Text>
                 )}
@@ -209,9 +211,9 @@ export default function Notifications() {
                 <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
                     <View className="bg-white rounded-lg p-4 w-80">
                         <Text className="text-lg mb-4">
-                            Please scan your fingerprint to mark attendance for {selectedNotification?.subject}.
+                            Please mark your attendance for {selectedNotification?.subject}.
                         </Text>
-                        <Button title="Submit Fingerprint" onPress={handleFingerprintAuthentication} />
+                        <Button title="Submit Fingerprint or Proceed" onPress={handleAttendanceMarking} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
                     </View>
                 </View>

@@ -96,8 +96,8 @@ export default function StudentSignup() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/loginBackground.png')} // Background image
-      style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+    source={{ uri: 'https://via.placeholder.com/300' }}
+    style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
     >
       <View className="flex-1 justify-center items-center p-4">
         <View className="w-full items-center mt-36">

@@ -7,32 +7,34 @@ const MarkAttendance = async (req, res) => {
     const { studentId, subject, division, notificationId, deviceId } = req.body;
 
     try {
-        // Find the student by ID to get their details
+        // Find the student by ID
         const student = await Student.findById(studentId);
         if (!student) {
+            console.log("Student not found for ID:", studentId);
             return res.status(404).json({ 
-                message: 'Student not found', 
+                message: 'Student not found.', 
                 showPopup: true 
             });
         }
 
-        // Check if the device ID matches the student's registered device
+        // Check if the device ID matches
+        console.log("Registered Device ID:", student.deviceId, "| Provided Device ID:", deviceId);
         if (student.deviceId !== deviceId) {
             return res.status(400).json({
-                message: 'Attendance can only be marked from the registered device.',
+                message: 'Your device is not authorized to mark attendance. Please contact your instructor for assistance.',
                 showPopup: true,
             });
         }
 
-        // Check if attendance for this notification and student already exists
+        // Check if attendance already exists
         const existingAttendance = await Attendance.findOne({
             studentId: student._id,
             subject,
             division,
             notificationId
         });
-
         if (existingAttendance) {
+            console.log("Attendance already marked for:", { studentId, subject, division, notificationId });
             return res.status(400).json({
                 message: 'Attendance already marked for this notification.',
                 showPopup: true,
@@ -45,13 +47,12 @@ const MarkAttendance = async (req, res) => {
             studentName: student.username,
             subject,
             division,
-            prn: student.prn, // Add PRN from student record
+            prn: student.prn,
             year: student.year,
         });
-
         await attendance.save();
 
-        // Mark the notification as done
+        // Update notification (if provided)
         if (notificationId) {
             const notification = await Notification.findById(notificationId);
             if (notification) {
@@ -60,16 +61,17 @@ const MarkAttendance = async (req, res) => {
             }
         }
 
-        res.status(200).json({ 
+        // Success response
+        return res.status(200).json({ 
             message: 'Attendance marked successfully.', 
             showPopup: false 
         });
 
     } catch (error) {
-        console.error("Error marking attendance:", error);
+        console.error("Error marking attendance:", error.message);
         res.status(500).json({ 
-            message: 'An error occurred while marking attendance.', 
-            error,
+            message: 'Failed to mark attendance. Please try again.', 
+            error: error.message,
             showPopup: true 
         });
     }

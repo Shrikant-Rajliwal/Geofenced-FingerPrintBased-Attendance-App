@@ -7,9 +7,8 @@ export default function Index() {
       {/* Logo at the Top */}
       <View className="flex justify-center items-center mt-10">
         <Image
-          source={require('../assets/images/logo.png')} // Make sure the path to your logo file is correct
-          style={{ width: 150, height: 150 }} // Adjust width and height as per your logo size
-          resizeMode="contain"
+          source={{ uri: 'https://via.placeholder.com/300' }}
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
         />
       </View>
 

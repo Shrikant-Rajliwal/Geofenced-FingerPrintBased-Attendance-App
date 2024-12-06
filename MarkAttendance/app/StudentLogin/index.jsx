@@ -54,11 +54,10 @@ export default function StudentLogin() {
             setLoading(false); // Stop loading state
         }
     };
-    
-    
 
     return (
         <ImageBackground
+            // Temporarily replace with a remote URL to check for any local image issues
             source={require('../../assets/images/loginBackground.png')}
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
         >
@@ -94,7 +93,7 @@ export default function StudentLogin() {
                         />
                     </View>
                     <TouchableOpacity onPress={() => router.push('/ForgotPassword')}>
-                        <Text className=" ml-1 font-semibold text-blue-800">Forgot Password?</Text>
+                        <Text className="ml-1 font-semibold text-blue-800">Forgot Password?</Text>
                     </TouchableOpacity>
 
                     <View className="flex justify-center items-center">

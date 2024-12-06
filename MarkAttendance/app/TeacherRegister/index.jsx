@@ -52,8 +52,8 @@ export default function TeacherRegister() {
 
     return (
         <ImageBackground
-            source={require('../../assets/images/loginBackground.png')} // Background image
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        source={require('../../assets/images/loginBackground.png')}
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
         >
             <View className="flex-1 justify-center items-center p-4 mt-10">
 

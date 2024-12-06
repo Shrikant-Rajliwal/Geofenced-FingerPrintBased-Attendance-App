@@ -43,7 +43,7 @@ export default function TeacherLogin() {
         console.log(res.data);
         if (res.data.status === 'OK') {
           Alert.alert("Login Successful!!");
-          router.push('/TeacherDashboard');
+          router.push('Teacher/TeacherDashboard');
         } else {
           Alert.alert(res.data.message || "Login Failed");
         }
@@ -56,8 +56,8 @@ export default function TeacherLogin() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/loginBackground.png')} // Path to your background image
-      style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+    source={require('../../assets/images/loginBackground.png')}
+    style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
     >
       <View className="flex-1 justify-center items-center">
 

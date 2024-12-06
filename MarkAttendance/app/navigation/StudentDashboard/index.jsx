@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useState, useEffect } from "react";
-import { View, Text, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, Text, ImageBackground, TouchableOpacity, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons'; // Import the icon set you want to use
@@ -43,6 +43,13 @@ export default function StudentDashboard() {
       source={require('../../../assets/images/studentDashboard.png')} // Adjust the path to your local image
       style={{ flex: 1 }}
     >
+      {/* StatusBar with custom color */}
+      <StatusBar 
+        translucent={true} 
+        barStyle="light-content" // Light text and icons for dark background
+        backgroundColor="#33B7FF" // Making the status bar transparent
+      />
+
       <View className="flex-1">
         <View className="absolute top-4 right-3">
           <TouchableOpacity onPress={() => { /* Handle notification icon press */ }}>

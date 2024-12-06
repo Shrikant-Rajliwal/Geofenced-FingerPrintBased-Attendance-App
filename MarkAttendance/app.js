@@ -1,11 +1,5 @@
-// app.js
-import { Redirect } from 'expo-router';
+import { Slot } from 'expo-router';  // Import Slot from expo-router
 
-export default function app() {
-  return (
-    <>
-        <Redirect href="/TeacherLogin" />
-    </>
-    
-  );
+export default function App() {
+  return <Slot />;  // Use Slot to render pages dynamically
 }
